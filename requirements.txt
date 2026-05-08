@@ -1,9 +1,11 @@
 langchain==0.3.25
 langchain-community==0.3.23
 langchain-ollama==0.3.2
+langchain-openai==0.3.35
 langchain-mcp-adapters==0.1.7
 fastmcp==2.3.4
 chromadb==0.6.3
+markdown-it-py==4.2.0
 google-api-python-client==2.169.0
 google-auth-httplib2==0.2.0
 google-auth-oauthlib==1.2.1

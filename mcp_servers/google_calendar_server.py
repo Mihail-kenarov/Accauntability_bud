@@ -1,7 +1,9 @@
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from fastmcp import FastMCP
 from google.auth.transport.requests import Request
@@ -40,6 +42,22 @@ def _calendar_id() -> str:
     return os.getenv("GOOGLE_CALENDAR_ID", "primary")
 
 
+def _local_timezone() -> ZoneInfo:
+    return ZoneInfo(os.getenv("APP_TIMEZONE", "Europe/Amsterdam"))
+
+
+def _normalize_event_datetime(value: str) -> str:
+    cleaned = value.strip().replace(" ", "T")
+    if cleaned.endswith("Z"):
+        cleaned = f"{cleaned[:-1]}+00:00"
+
+    parsed = datetime.fromisoformat(cleaned)
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=_local_timezone())
+
+    return parsed.isoformat(timespec="seconds")
+
+
 def _list_calendar_events(date: str) -> str:
     service = get_calendar_service()
     result = (
@@ -76,8 +94,8 @@ def _create_calendar_event(
     event = {
         "summary": title,
         "description": description,
-        "start": {"dateTime": start},
-        "end": {"dateTime": end},
+        "start": {"dateTime": _normalize_event_datetime(start)},
+        "end": {"dateTime": _normalize_event_datetime(end)},
     }
     created = (
         service.events()
@@ -107,9 +125,9 @@ def _update_calendar_event(
     if description is not None:
         patch_body["description"] = description
     if start is not None:
-        patch_body["start"] = {"dateTime": start}
+        patch_body["start"] = {"dateTime": _normalize_event_datetime(start)}
     if end is not None:
-        patch_body["end"] = {"dateTime": end}
+        patch_body["end"] = {"dateTime": _normalize_event_datetime(end)}
 
     updated = (
         service.events()
@@ -143,7 +161,7 @@ def create_calendar_event(
     end: str,
     description: str = "",
 ) -> str:
-    """Create a Google Calendar event with ISO datetime start/end values."""
+    """Create a Google Calendar event. Start/end may be ISO datetimes or YYYY-MM-DD HH:MM local time."""
     return _create_calendar_event(title, start, end, description)
 
 
@@ -155,7 +173,7 @@ def update_calendar_event(
     end: Optional[str] = None,
     description: Optional[str] = None,
 ) -> str:
-    """Update an existing Google Calendar event by event_id."""
+    """Update an existing Google Calendar event by event_id. Start/end may be ISO datetimes or YYYY-MM-DD HH:MM local time."""
     return _update_calendar_event(event_id, title, start, end, description)
 
 

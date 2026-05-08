@@ -1,16 +1,14 @@
-import os
-
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain_ollama import ChatOllama
+
+from agent.llm import build_chat_model
 
 
 def build_agent(
     tools: list,
     return_intermediate_steps: bool = False,
 ) -> AgentExecutor:
-    model = os.getenv("OLLAMA_MODEL", "ministral-3:8b")
-    llm = ChatOllama(model=model, temperature=0.3)
+    llm = build_chat_model(temperature=0.3)
 
     prompt = ChatPromptTemplate.from_messages(
         [

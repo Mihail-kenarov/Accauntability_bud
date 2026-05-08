@@ -1,10 +1,9 @@
 import json
-import os
 from typing import Any
 
 from langchain_core.prompts import PromptTemplate
-from langchain_ollama import ChatOllama
 
+from agent.llm import build_chat_model
 from agent.tools.chroma_tools import store_user_fact
 
 
@@ -28,8 +27,7 @@ def _parse_facts_json(raw: str) -> list[dict[str, Any]]:
 
 
 def _extract_facts_with_llm(message: str) -> list[dict[str, Any]]:
-    model = os.getenv("OLLAMA_MODEL", "ministral-3:8b")
-    llm = ChatOllama(model=model, temperature=0, format="json")
+    llm = build_chat_model(temperature=0)
     result = (_PROMPT | llm).invoke({"message": message})
     return _parse_facts_json(result.content)
 
