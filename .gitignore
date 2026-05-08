@@ -1,0 +1,8 @@
+.env
+credentials/credentials.json
+credentials/token.json
+db/
+__pycache__/
+.pytest_cache/
+*.pyc
+assingnment.txt
