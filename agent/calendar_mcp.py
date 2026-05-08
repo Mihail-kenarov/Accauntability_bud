@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 from langchain_mcp_adapters.client import MultiServerMCPClient
 
@@ -13,7 +14,7 @@ def build_calendar_mcp_client() -> MultiServerMCPClient:
         {
             "google_calendar": {
                 "transport": "stdio",
-                "command": "python",
+                "command": sys.executable,
                 "args": [str(server_path)],
             }
         }

@@ -5,7 +5,10 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_ollama import ChatOllama
 
 
-def build_agent(tools: list) -> AgentExecutor:
+def build_agent(
+    tools: list,
+    return_intermediate_steps: bool = False,
+) -> AgentExecutor:
     model = os.getenv("OLLAMA_MODEL", "ministral-3:8b")
     llm = ChatOllama(model=model, temperature=0.3)
 
@@ -19,4 +22,10 @@ def build_agent(tools: list) -> AgentExecutor:
     )
 
     agent = create_tool_calling_agent(llm, tools, prompt)
-    return AgentExecutor(agent=agent, tools=tools, verbose=True, max_iterations=8)
+    return AgentExecutor(
+        agent=agent,
+        tools=tools,
+        verbose=True,
+        max_iterations=8,
+        return_intermediate_steps=return_intermediate_steps,
+    )

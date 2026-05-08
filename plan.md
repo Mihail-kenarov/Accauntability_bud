@@ -12,6 +12,31 @@
 
 ---
 
+## Current Progress
+
+**Last updated:** 2026-05-08
+
+| Area | Status | Notes |
+|---|---|---|
+| GitHub repo | Done | Repo is connected and tracking `main` / `origin/main`. |
+| Python environment | Done | `.venv` created with Python 3.12 and dependencies installed. `.venv/` is ignored by Git. |
+| Project scaffolding | Done | Base package folders, env templates, ignore rules, and requirements are in place. |
+| LangChain agent core | Done | `agent/agent.py` and `agent/prompts.py` exist. Live Ollama smoke test is still pending. |
+| Google Calendar backend | Done | MCP server supports list/create/update/delete event operations. OAuth token exists and real Calendar read succeeded. |
+| ChromaDB memory tools | Done | User facts and conversation logs can be stored/retrieved. Tests use isolated Chroma stores. |
+| Fact extraction | Done | Best-effort LLM fact extraction module exists and is unit tested with mocked extraction. Live Ollama extraction test is pending. |
+| SQLite habit tracker | Done | Daily plans, habit logs, and streak tracking are implemented and tested. |
+| Streamlit web app | Not started | `app.py` still needs to be created. This is what will make the project runnable as a web app. |
+| End-to-end agent wiring | Not started | Calendar MCP tools, Chroma tools, SQLite tools, prompt, and UI still need to be wired together. |
+| Mobile/browser testing | Not started | Depends on Streamlit app implementation. |
+| Deployment/demo | Not started | Optional later step for assignment demo. |
+
+**Current test status:** `20 passed`
+
+**Implementation note:** `sentence-transformers` was removed from `requirements.txt` because it pulled a very large CUDA/PyTorch dependency stack. ChromaDB remains usable with its lighter local ONNX embedding path.
+
+---
+
 ## Prerequisites (do before Task 1)
 
 1. Install [Ollama](https://ollama.com) and pull the model:
