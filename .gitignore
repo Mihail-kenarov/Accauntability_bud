@@ -1,4 +1,5 @@
 .env
+.venv/
 credentials/credentials.json
 credentials/token.json
 db/
