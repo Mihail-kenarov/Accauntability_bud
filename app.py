@@ -206,30 +206,126 @@ header[data-testid="stHeader"] {
     color: var(--muted);
 }
 
-.cal-item {
+.day-timeline {
+    position: relative;
     display: grid;
-    grid-template-columns: 4.1rem 1fr;
-    gap: .75rem;
-    padding: .72rem 0;
-    border-bottom: 1px solid var(--line);
+    grid-template-columns: 3.4rem minmax(0, 1fr);
+    min-height: 45.6rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: color-mix(in oklch, var(--panel) 76%, var(--surface));
+    overflow: hidden;
     animation: slideFade 240ms cubic-bezier(.22,1,.36,1) both;
 }
 
-.cal-item:last-child {
+.cal-hours {
+    display: grid;
+    grid-template-rows: repeat(24, minmax(1.9rem, 1fr));
+    border-right: 1px solid var(--line);
+    background: color-mix(in oklch, var(--surface) 74%, var(--panel));
+}
+
+.cal-hour {
+    padding: .18rem .42rem 0 0;
+    border-bottom: 1px solid color-mix(in oklch, var(--line) 72%, transparent);
+    color: var(--muted);
+    font-size: .66rem;
+    line-height: 1.1;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.cal-hour:last-child {
     border-bottom: 0;
 }
 
-.cal-time {
-    color: var(--muted);
-    font-size: .74rem;
-    line-height: 1.35;
+.cal-grid {
+    position: relative;
+    display: grid;
+    grid-template-rows: repeat(24, minmax(1.9rem, 1fr));
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            transparent 0,
+            transparent calc((100% / 24) - 1px),
+            color-mix(in oklch, var(--line) 68%, transparent) calc((100% / 24) - 1px),
+            color-mix(in oklch, var(--line) 68%, transparent) calc(100% / 24)
+        );
 }
 
-.cal-title {
+.cal-event {
+    position: absolute;
+    left: .55rem;
+    right: .55rem;
+    min-height: 2.15rem;
+    padding: .42rem .52rem;
+    border: 1px solid color-mix(in oklch, var(--accent) 28%, var(--line));
+    border-radius: 7px;
+    background: color-mix(in oklch, var(--accent-soft) 68%, var(--panel));
+    overflow: hidden;
+    box-shadow: 0 1px 0 color-mix(in oklch, var(--accent) 18%, transparent);
+}
+
+.cal-event-time {
+    color: var(--muted);
+    font-size: .66rem;
+    line-height: 1.2;
+    margin-bottom: .14rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.cal-event-title {
     color: var(--text);
     font-weight: 650;
-    font-size: .86rem;
+    font-size: .78rem;
+    line-height: 1.22;
+    overflow-wrap: anywhere;
+}
+
+.cal-now {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--accent);
+    box-shadow: 0 0 0 1px color-mix(in oklch, var(--accent) 16%, transparent);
+}
+
+.cal-now::before {
+    content: "";
+    position: absolute;
+    left: -.25rem;
+    top: -.2rem;
+    width: .42rem;
+    height: .42rem;
+    border-radius: 999px;
+    background: var(--accent);
+}
+
+.cal-open-day {
+    position: absolute;
+    left: .72rem;
+    right: .72rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: .6rem .7rem;
+    border: 1px dashed color-mix(in oklch, var(--soft) 72%, var(--line));
+    border-radius: 8px;
+    background: color-mix(in oklch, var(--panel) 82%, transparent);
+    color: var(--muted);
+    font-size: .78rem;
     line-height: 1.35;
+    text-align: center;
+}
+
+.cal-all-day {
+    margin-bottom: .55rem;
+    display: grid;
+    gap: .4rem;
+}
+
+.cal-all-day .cal-event {
+    position: static;
 }
 
 .plan-list {
@@ -645,6 +741,104 @@ def _format_event_time(value: str) -> str:
     return parsed.strftime("%H:%M")
 
 
+def _event_minute(day: str, value: str, fallback: int) -> int:
+    if not value or "T" not in value:
+        return fallback
+
+    cleaned = value.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(cleaned)
+    except ValueError:
+        return fallback
+
+    current_day = date.fromisoformat(day)
+    if parsed.date() < current_day:
+        return 0
+    if parsed.date() > current_day:
+        return 24 * 60
+    return parsed.hour * 60 + parsed.minute
+
+
+def _calendar_hour_labels() -> str:
+    labels = []
+    for hour in range(24):
+        label = "00:00" if hour == 0 else f"{hour:02d}:00"
+        labels.append(f'<div class="cal-hour">{label}</div>')
+    return "".join(labels)
+
+
+def _now_marker(day: str) -> str:
+    today = date.today().isoformat()
+    if day != today:
+        return ""
+
+    now = datetime.now()
+    top = ((now.hour * 60 + now.minute) / (24 * 60)) * 100
+    return f'<div class="cal-now" style="top:{top:.3f}%"></div>'
+
+
+def _calendar_event_block(event: dict[str, Any], day: str) -> str:
+    start_raw = event.get("start", "")
+    end_raw = event.get("end", "")
+    start = _format_event_time(start_raw)
+    end = _format_event_time(end_raw)
+    title = html.escape(event.get("title", "Untitled"))
+
+    if start == "All day":
+        return f"""
+<div class="cal-event">
+    <div class="cal-event-time">All day</div>
+    <div class="cal-event-title">{title}</div>
+</div>
+"""
+
+    start_minute = max(0, min(24 * 60, _event_minute(day, start_raw, 0)))
+    end_minute = max(0, min(24 * 60, _event_minute(day, end_raw, start_minute + 30)))
+    if end_minute <= start_minute:
+        end_minute = min(24 * 60, start_minute + 30)
+
+    top = (start_minute / (24 * 60)) * 100
+    height = ((end_minute - start_minute) / (24 * 60)) * 100
+    time_range = f"{html.escape(start)} - {html.escape(end)}"
+    return f"""
+<div class="cal-event" style="top:calc({top:.3f}% + .14rem);height:max(2.15rem, calc({height:.3f}% - .28rem));">
+    <div class="cal-event-time">{time_range}</div>
+    <div class="cal-event-title">{title}</div>
+</div>
+"""
+
+
+def _day_timeline_html(day: str, events: list[dict[str, Any]]) -> str:
+    all_day_events = [
+        event for event in events if _format_event_time(event.get("start", "")) == "All day"
+    ]
+    timed_events = [
+        event for event in events if _format_event_time(event.get("start", "")) != "All day"
+    ]
+    all_day = ""
+    if all_day_events:
+        all_day_blocks = "".join(
+            _calendar_event_block(event, day) for event in all_day_events
+        )
+        all_day = f'<div class="cal-all-day">{all_day_blocks}</div>'
+
+    open_day = ""
+    if not events:
+        open_day = '<div class="cal-open-day">No scheduled events today</div>'
+
+    return (
+        all_day
+        + '<div class="day-timeline">'
+        + f'<div class="cal-hours">{_calendar_hour_labels()}</div>'
+        + '<div class="cal-grid">'
+        + open_day
+        + "".join(_calendar_event_block(event, day) for event in timed_events)
+        + _now_marker(day)
+        + "</div>"
+        + "</div>"
+    )
+
+
 @st.cache_data(ttl=90, show_spinner=False)
 def get_calendar_preview(day: str) -> dict[str, Any]:
     try:
@@ -733,22 +927,7 @@ def calendar_html(day: str) -> str:
             + "</div>"
         )
 
-    if not preview["events"]:
-        return head + '<div class="empty-note">No events found for today.</div>'
-
-    rows = ""
-    for event in preview["events"][:7]:
-        start = _format_event_time(event.get("start", ""))
-        end = _format_event_time(event.get("end", ""))
-        time_range = start if start == "All day" else f"{start}<br>{end}"
-        title = html.escape(event.get("title", "Untitled"))
-        rows += f"""
-<div class="cal-item">
-    <div class="cal-time">{time_range}</div>
-    <div class="cal-title">{title}</div>
-</div>
-"""
-    return head + rows
+    return head + _day_timeline_html(day, preview["events"])
 
 
 def render_calendar(day: str) -> None:
