@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-10T00:00:00Z",
+  "title": "Design System: Accountability Bud",
+  "extensions": {
+    "colorMeta": {
+      "morning-mist": {
+        "role": "neutral",
+        "displayName": "Morning Mist",
+        "canonical": "oklch(98.2% 0.006 145)",
+        "tonalRamp": [
+          "oklch(15% 0.005 145)",
+          "oklch(28% 0.008 145)",
+          "oklch(40% 0.010 145)",
+          "oklch(52% 0.012 145)",
+          "oklch(65% 0.010 145)",
+          "oklch(78% 0.009 145)",
+          "oklch(89.5% 0.014 145)",
+          "oklch(98.2% 0.006 145)"
+        ]
+      },
+      "pale-page": {
+        "role": "neutral",
+        "displayName": "Pale Page",
+        "canonical": "oklch(99.1% 0.004 145)",
+        "tonalRamp": [
+          "oklch(15% 0.003 145)",
+          "oklch(28% 0.004 145)",
+          "oklch(42% 0.004 145)",
+          "oklch(55% 0.004 145)",
+          "oklch(68% 0.004 145)",
+          "oklch(80% 0.004 145)",
+          "oklch(91% 0.004 145)",
+          "oklch(99.1% 0.004 145)"
+        ]
+      },
+      "weathered-page": {
+        "role": "neutral",
+        "displayName": "Weathered Page",
+        "canonical": "oklch(95.8% 0.012 145)",
+        "tonalRamp": [
+          "oklch(18% 0.008 145)",
+          "oklch(30% 0.009 145)",
+          "oklch(44% 0.010 145)",
+          "oklch(57% 0.011 145)",
+          "oklch(68% 0.011 145)",
+          "oklch(78% 0.012 145)",
+          "oklch(88% 0.012 145)",
+          "oklch(95.8% 0.012 145)"
+        ]
+      },
+      "sage-rule": {
+        "role": "neutral",
+        "displayName": "Sage Rule",
+        "canonical": "oklch(89.5% 0.014 145)",
+        "tonalRamp": [
+          "oklch(20% 0.010 145)",
+          "oklch(32% 0.011 145)",
+          "oklch(45% 0.012 145)",
+          "oklch(58% 0.013 145)",
+          "oklch(68% 0.013 145)",
+          "oklch(78% 0.014 145)",
+          "oklch(89.5% 0.014 145)",
+          "oklch(96% 0.010 145)"
+        ]
+      },
+      "forest-ink": {
+        "role": "neutral",
+        "displayName": "Forest Ink",
+        "canonical": "oklch(25% 0.025 150)",
+        "tonalRamp": [
+          "oklch(10% 0.015 150)",
+          "oklch(25% 0.025 150)",
+          "oklch(38% 0.025 150)",
+          "oklch(52% 0.025 150)",
+          "oklch(62% 0.024 150)",
+          "oklch(70% 0.026 150)",
+          "oklch(82% 0.018 150)",
+          "oklch(93% 0.010 150)"
+        ]
+      },
+      "sage-dusk": {
+        "role": "neutral",
+        "displayName": "Sage Dusk",
+        "canonical": "oklch(52% 0.025 150)",
+        "tonalRamp": [
+          "oklch(12% 0.018 150)",
+          "oklch(25% 0.022 150)",
+          "oklch(38% 0.024 150)",
+          "oklch(52% 0.025 150)",
+          "oklch(62% 0.024 150)",
+          "oklch(72% 0.022 150)",
+          "oklch(84% 0.016 150)",
+          "oklch(95% 0.008 150)"
+        ]
+      },
+      "pale-whisper": {
+        "role": "neutral",
+        "displayName": "Pale Whisper",
+        "canonical": "oklch(70% 0.026 150)",
+        "tonalRamp": [
+          "oklch(14% 0.018 150)",
+          "oklch(28% 0.022 150)",
+          "oklch(42% 0.024 150)",
+          "oklch(55% 0.025 150)",
+          "oklch(70% 0.026 150)",
+          "oklch(80% 0.020 150)",
+          "oklch(88% 0.014 150)",
+          "oklch(96% 0.008 150)"
+        ]
+      },
+      "counselors-sage": {
+        "role": "primary",
+        "displayName": "Counselor's Sage",
+        "canonical": "oklch(54% 0.105 150)",
+        "tonalRamp": [
+          "oklch(15% 0.060 150)",
+          "oklch(25% 0.075 150)",
+          "oklch(36% 0.090 150)",
+          "oklch(44% 0.100 150)",
+          "oklch(54% 0.105 150)",
+          "oklch(65% 0.085 150)",
+          "oklch(78% 0.058 150)",
+          "oklch(93.5% 0.035 150)"
+        ]
+      },
+      "sage-blush": {
+        "role": "primary",
+        "displayName": "Sage Blush",
+        "canonical": "oklch(93.5% 0.035 150)",
+        "tonalRamp": [
+          "oklch(20% 0.025 150)",
+          "oklch(35% 0.030 150)",
+          "oklch(50% 0.035 150)",
+          "oklch(63% 0.035 150)",
+          "oklch(74% 0.035 150)",
+          "oklch(83% 0.035 150)",
+          "oklch(90% 0.035 150)",
+          "oklch(93.5% 0.035 150)"
+        ]
+      },
+      "pale-amber": {
+        "role": "neutral",
+        "displayName": "Pale Amber",
+        "canonical": "oklch(94.5% 0.035 85)",
+        "tonalRamp": [
+          "oklch(18% 0.025 85)",
+          "oklch(32% 0.030 85)",
+          "oklch(48% 0.035 85)",
+          "oklch(62% 0.035 85)",
+          "oklch(74% 0.035 85)",
+          "oklch(83% 0.035 85)",
+          "oklch(90% 0.035 85)",
+          "oklch(94.5% 0.035 85)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Headline", "purpose": "Section-level headings within content panels. Used sparingly — one per major view." },
+      "title": { "displayName": "Title", "purpose": "Screen-level title in the app-title bar. One per screen." },
+      "body": { "displayName": "Body", "purpose": "Chat message copy — the primary reading surface. Max 74ch line length." },
+      "label": { "displayName": "Label", "purpose": "Section titles in the rail and context stack. Never uppercase." }
+    },
+    "shadows": [
+      {
+        "name": "event-lift",
+        "value": "0 1px 0 color-mix(in oklch, oklch(54% 0.105 150) 18%, transparent)",
+        "purpose": "Calendar event blocks only. Hair of tinted lift to distinguish event from grid without breaking flatness."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 3px color-mix(in oklch, oklch(93.5% 0.035 150) 55%, transparent)",
+        "purpose": "Text inputs and form fields on focus. The only focus indicator in the system."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-quart",
+        "value": "cubic-bezier(.22,1,.36,1)",
+        "purpose": "All state transitions: button hover, message entry, chip entry. 180ms for micro-interactions, 240ms for content entry."
+      },
+      {
+        "name": "slide-fade",
+        "value": "opacity 0→1, translateY 6px→0, 240ms ease-out-quart",
+        "purpose": "Message rows and day-timeline on mount."
+      },
+      {
+        "name": "chip-in",
+        "value": "opacity 0→1, translateY 3px→0, 200ms ease-out-quart",
+        "purpose": "Trace chips appearing after an agent response."
+      }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "640px", "purpose": "Single-column layout; sidebar collapses." },
+      { "name": "desktop", "value": "1024px", "purpose": "Three-column layout: sidebar + main + context rail." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "Standard secondary action. Bordered tile, no fill at rest.",
+      "html": "<button class=\"ds-btn-default\">Refresh</button>",
+      "css": ".ds-btn-default { min-height: 2.35rem; padding: 0.5rem 0.75rem; background: oklch(99.1% 0.004 145); border: 1px solid oklch(89.5% 0.014 145); border-radius: 8px; color: oklch(25% 0.025 150); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: background 180ms cubic-bezier(.22,1,.36,1), border-color 180ms cubic-bezier(.22,1,.36,1), transform 180ms cubic-bezier(.22,1,.36,1); box-shadow: none; } .ds-btn-default:hover { background: oklch(93.5% 0.035 150); border-color: color-mix(in oklch, oklch(54% 0.105 150) 45%, oklch(89.5% 0.014 145)); transform: translateY(-1px); } .ds-btn-default:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single committed action per context. Counselor's Sage fill. One per screen.",
+      "html": "<button class=\"ds-btn-primary\">Send</button>",
+      "css": ".ds-btn-primary { min-height: 2.8rem; padding: 0.7rem 1rem; background: oklch(54% 0.105 150); border: 1px solid oklch(54% 0.105 150); border-radius: 8px; color: oklch(99.1% 0.004 145); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 0.88rem; font-weight: 680; white-space: nowrap; cursor: pointer; transition: background 180ms cubic-bezier(.22,1,.36,1), transform 180ms cubic-bezier(.22,1,.36,1); box-shadow: none; } .ds-btn-primary:hover { background: oklch(48% 0.105 150); border-color: oklch(48% 0.105 150); transform: translateY(-1px); } .ds-btn-primary:active { transform: translateY(0); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in oklch, oklch(93.5% 0.035 150) 55%, transparent); }"
+    },
+    {
+      "name": "Sidebar Button",
+      "kind": "button",
+      "refersTo": "button-sidebar",
+      "description": "Full-width navigation item. Transparent at rest; panel-fill on hover.",
+      "html": "<button class=\"ds-btn-sidebar\">Today</button>",
+      "css": ".ds-btn-sidebar { width: 100%; min-height: 2.35rem; padding: 0.62rem 0.7rem; background: transparent; border: 1px solid transparent; border-radius: 8px; color: oklch(25% 0.025 150); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 0.88rem; font-weight: 400; text-align: left; cursor: pointer; transition: background 180ms cubic-bezier(.22,1,.36,1), border-color 180ms cubic-bezier(.22,1,.36,1); } .ds-btn-sidebar:hover { background: oklch(99.1% 0.004 145); border-color: oklch(89.5% 0.014 145); }"
+    },
+    {
+      "name": "Active Nav Item",
+      "kind": "nav",
+      "refersTo": "nav-active",
+      "description": "Currently selected navigation destination. Sage Blush fill, mixed-sage border.",
+      "html": "<div class=\"ds-nav-active\">Today</div>",
+      "css": ".ds-nav-active { display: block; padding: 0.62rem 0.7rem; border-radius: 8px; color: oklch(25% 0.025 150); background: oklch(93.5% 0.035 150); border: 1px solid color-mix(in oklch, oklch(54% 0.105 150) 42%, oklch(89.5% 0.014 145)); font-size: 0.9rem; font-weight: 650; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": null,
+      "description": "Chat message input. Clean stroke, Counselor's Sage focus glow.",
+      "html": "<input class=\"ds-input\" type=\"text\" placeholder=\"What's on your mind?\">",
+      "css": ".ds-input { min-height: 2.8rem; width: 100%; padding: 0.6rem 0.75rem; background: oklch(99.1% 0.004 145); border: 1px solid oklch(89.5% 0.014 145); border-radius: 8px; color: oklch(25% 0.025 150); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 0.88rem; box-shadow: none; outline: none; transition: border-color 180ms cubic-bezier(.22,1,.36,1), box-shadow 180ms cubic-bezier(.22,1,.36,1); } .ds-input::placeholder { color: oklch(70% 0.026 150); } .ds-input:focus { border-color: color-mix(in oklch, oklch(54% 0.105 150) 55%, oklch(89.5% 0.014 145)); box-shadow: 0 0 0 3px color-mix(in oklch, oklch(93.5% 0.035 150) 55%, transparent); }"
+    },
+    {
+      "name": "Trace Chip",
+      "kind": "chip",
+      "refersTo": null,
+      "description": "Source attribution chip shown below agent responses. Pill shape, Sage Dusk text. Animates in.",
+      "html": "<span class=\"ds-trace-chip\">Google Calendar</span>",
+      "css": ".ds-trace-chip { display: inline-flex; align-items: center; min-height: 1.55rem; padding: 0.18rem 0.52rem; border-radius: 9999px; border: 1px solid oklch(89.5% 0.014 145); background: oklch(99.1% 0.004 145); color: oklch(52% 0.025 150); font-size: 0.72rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; animation: ds-chip-in 200ms cubic-bezier(.22,1,.36,1) both; } @keyframes ds-chip-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } } @media (prefers-reduced-motion: reduce) { .ds-trace-chip { animation: none; } }"
+    },
+    {
+      "name": "Metric Card",
+      "kind": "card",
+      "refersTo": null,
+      "description": "Compact habit signal tile. Label + value + thin progress bar. No large numbers, no gradients.",
+      "html": "<div class=\"ds-metric\"><div class=\"ds-metric-label\">Streak</div><div class=\"ds-metric-value\">7 days</div><div class=\"ds-metric-bar\"><div class=\"ds-metric-fill\" style=\"width: 70%\"></div></div></div>",
+      "css": ".ds-metric { min-height: 3.55rem; padding: 0.68rem 0.78rem; border: 1px solid oklch(89.5% 0.014 145); border-radius: 8px; background: color-mix(in oklch, oklch(99.1% 0.004 145) 82%, transparent); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; } .ds-metric-label { color: oklch(52% 0.025 150); font-size: 0.72rem; line-height: 1.2; margin-bottom: 0.35rem; } .ds-metric-value { color: oklch(25% 0.025 150); font-size: 1rem; line-height: 1.2; font-weight: 720; } .ds-metric-bar { height: 0.18rem; background: oklch(95.8% 0.012 145); border-radius: 9999px; margin-top: 0.72rem; overflow: hidden; } .ds-metric-fill { height: 100%; border-radius: 9999px; background: oklch(54% 0.105 150); }"
+    },
+    {
+      "name": "Calendar Event Block",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "Timed event in the day-timeline grid. Accent-tinted border and background at low opacity.",
+      "html": "<div class=\"ds-cal-event\"><div class=\"ds-cal-event-time\">9:00 AM</div><div class=\"ds-cal-event-title\">Stand-up</div></div>",
+      "css": ".ds-cal-event { padding: 0.42rem 0.52rem; border: 1px solid color-mix(in oklch, oklch(54% 0.105 150) 28%, oklch(89.5% 0.014 145)); border-radius: 7px; background: color-mix(in oklch, oklch(93.5% 0.035 150) 68%, oklch(99.1% 0.004 145)); overflow: hidden; box-shadow: 0 1px 0 color-mix(in oklch, oklch(54% 0.105 150) 18%, transparent); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; } .ds-cal-event-time { color: oklch(52% 0.025 150); font-size: 0.66rem; line-height: 1.2; margin-bottom: 0.14rem; font-variant-numeric: tabular-nums; } .ds-cal-event-title { color: oklch(25% 0.025 150); font-weight: 650; font-size: 0.78rem; line-height: 1.22; overflow-wrap: anywhere; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Ledger",
+    "overview": "Accountability Bud is a private record of an honest life. Its visual language borrows from the ledger book and the personal planner: unhurried, factual, and organized around evidence rather than encouragement. The interface does not celebrate. It does not gamify. It shows the user what is true — their calendar, their habits, their patterns — and creates the conditions for grounded decisions.\n\nThe palette is a single sage-green note played quietly across an almost-white ground. There is one accent color — Counselor's Sage — and it appears only where something is interactive or confirmed. Typography is system-native, variable-weight, and sized small. Layout is column-and-rail: a conversational center flanked by live context on the right, navigation on the left. Nothing decorates. Everything informs.\n\nThis system explicitly rejects: the generic chatbot, the corporate analytics dashboard, the habit tracker that awards badges and shoots confetti, and the productivity tool that requires more management than the day it is supposed to help plan.",
+    "keyCharacteristics": [
+      "Light theme, sage-tinted neutrals throughout; no pure whites or pure blacks",
+      "Single accent used at ≤10% surface coverage; rarity is the point",
+      "System UI typeface at variable weights; no web fonts, no display face",
+      "Flat by default; depth implied through tone and border, never shadow stacking",
+      "Column-and-rail layout; context is always visible without navigation"
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "Counselor's Sage marks interactivity and truth; it does not decorate. It must appear on ≤10% of any screen.", "section": "colors" },
+      { "name": "The Sage-Tinted Neutrals Rule", "body": "Every neutral carries hue 145–150 at chroma 0.004–0.035. Pure grays (chroma 0) are prohibited.", "section": "colors" },
+      { "name": "The Variable Weight Rule", "body": "Font weights range from 400 to 760. Use 400–500 for reading, 650–760 for emphasis. Never bold an entire paragraph.", "section": "typography" },
+      { "name": "The No-Display Rule", "body": "No display typeface, no serif pairing, no web font load. The system font is the brand.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Surfaces are flat at rest. Shadows appear only as a response to interactive state — focus or event-block distinction.", "section": "elevation" },
+      { "name": "The Flat Metric Rule", "body": "Metric cards are compact signal tiles, not KPI displays. No large numbers, no gradient fills, no icons. The progress bar is 3px tall.", "section": "components" },
+      { "name": "The Restrained Button Rule", "body": "Default buttons use a panel background and a border — nothing more. The primary button is the only filled button per context.", "section": "components" }
+    ],
+    "dos": [
+      "Do tint every neutral toward hue 145–150. Even the lightest background carries trace chroma.",
+      "Do use Counselor's Sage on at most 2–3 distinct UI locations per screen.",
+      "Do animate state transitions at 180–240ms with cubic-bezier(.22,1,.36,1).",
+      "Do use font-variant-numeric: tabular-nums on all numeric captions.",
+      "Do keep body copy at ≤74ch and chat message containers at ≤58ch.",
+      "Do express hierarchy through weight contrast (400 → 720) before resorting to size.",
+      "Do use color-mix(in oklch, ...) for tinted borders and overlays.",
+      "Do respect prefers-reduced-motion for all keyframe animations."
+    ],
+    "donts": [
+      "Don't make this look or feel like a generic chatbot.",
+      "Don't make this look or feel like a corporate analytics dashboard.",
+      "Don't use confetti, badges, trophies, or celebratory overlays.",
+      "Don't use a dark color scheme.",
+      "Don't use loud motivational graphics or decorative illustrations.",
+      "Don't use heavy gradients or multi-stop color gradients.",
+      "Don't use border-left greater than 1px as a colored stripe on cards or alerts.",
+      "Don't use background-clip: text with a gradient.",
+      "Don't use glassmorphism decoratively.",
+      "Don't add modal dialogs as the first solution to a disclosure problem.",
+      "Don't stack identical icon+heading+text cards in a grid.",
+      "Don't add dashboard clutter that makes the user manage the tool instead of their day."
+    ]
+  }
+}
