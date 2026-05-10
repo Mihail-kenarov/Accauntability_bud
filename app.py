@@ -21,11 +21,15 @@ from agent.tools.chroma_tools import (
     store_user_fact,
 )
 from agent.tools.sqlite_tools import (
+    get_daily_tasks,
     get_daily_plan,
     get_habit_streaks,
     init_db,
     log_habit,
     save_daily_plan,
+    save_daily_tasks,
+    set_daily_subtask_completion,
+    set_daily_task_completion,
     update_habit_streaks,
 )
 from mcp_servers.google_calendar_server import _list_calendar_events
@@ -61,7 +65,15 @@ html, body, [class*="css"] {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
 }
 
+html,
+body,
+[data-testid="stAppViewContainer"] {
+    min-height: 100vh;
+    background: var(--surface);
+}
+
 .stApp {
+    min-height: 100vh;
     background:
         linear-gradient(180deg, var(--surface) 0%, oklch(96.8% 0.008 145) 100%);
     color: var(--text);
@@ -70,7 +82,7 @@ html, body, [class*="css"] {
 .block-container {
     max-width: 1540px;
     padding-top: 3.7rem;
-    padding-bottom: 2rem;
+    padding-bottom: 1.25rem;
 }
 
 header[data-testid="stHeader"] {
@@ -333,6 +345,39 @@ header[data-testid="stHeader"] {
     gap: .48rem;
 }
 
+.todo-panel {
+    padding: .9rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: color-mix(in oklch, var(--panel) 88%, var(--surface));
+}
+
+.todo-panel [data-testid="stCheckbox"] {
+    padding: .08rem 0;
+}
+
+.todo-panel [data-testid="stCheckbox"] label {
+    align-items: flex-start;
+    gap: .5rem;
+}
+
+.todo-panel [data-testid="stCheckbox"] p {
+    color: var(--text);
+    font-size: .86rem;
+    line-height: 1.35;
+}
+
+.todo-panel [data-testid="stCheckbox"] input:checked + div {
+    border-color: var(--accent);
+    background: var(--accent);
+}
+
+[data-testid="stCheckbox"] p {
+    color: var(--text) !important;
+    font-size: .88rem;
+    line-height: 1.35;
+}
+
 .plan-row {
     display: grid;
     grid-template-columns: .9rem 1fr;
@@ -384,17 +429,17 @@ header[data-testid="stHeader"] {
 }
 
 .metric-strip {
-    margin-top: 1rem;
-    border-top: 1px solid var(--line);
-    padding-top: 1rem;
+    margin-top: .8rem;
+    border-top: 0;
+    padding-top: 0;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 1rem;
+    gap: .85rem;
 }
 
 .metric {
-    min-height: 4.1rem;
-    padding: .85rem .9rem;
+    min-height: 3.55rem;
+    padding: .68rem .78rem;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: color-mix(in oklch, var(--panel) 82%, transparent);
@@ -429,18 +474,18 @@ header[data-testid="stHeader"] {
 }
 
 .quick-actions {
-    margin: .9rem 0 1.35rem;
+    margin: .9rem 0 .9rem;
 }
 
 .chat-thread {
-    min-height: 13.25rem;
-    max-height: 52vh;
+    height: clamp(12rem, calc(100vh - 33rem), 21rem);
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 1rem 0 1.15rem;
+    padding: 1rem .2rem 1.15rem 0;
     border-bottom: 1px solid var(--line);
     scrollbar-width: thin;
     scrollbar-color: color-mix(in oklch, var(--accent) 30%, var(--line)) transparent;
+    scroll-behavior: smooth;
 }
 
 .chat-thread::-webkit-scrollbar {
@@ -527,6 +572,39 @@ header[data-testid="stHeader"] {
     font-size: .88em;
 }
 
+.message-copy table {
+    display: block;
+    max-width: 100%;
+    margin: .75rem 0 1rem;
+    overflow-x: auto;
+    border-collapse: collapse;
+    border-spacing: 0;
+    color: var(--text);
+    font-size: .82rem;
+    line-height: 1.38;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--accent) 30%, var(--line)) transparent;
+}
+
+.message-copy th,
+.message-copy td {
+    min-width: 8.5rem;
+    padding: .52rem .62rem;
+    border: 1px solid var(--line);
+    text-align: left;
+    vertical-align: top;
+}
+
+.message-copy th {
+    background: var(--panel-strong);
+    color: var(--text);
+    font-weight: 720;
+}
+
+.message-copy td {
+    background: color-mix(in oklch, var(--panel) 72%, transparent);
+}
+
 .message-row.user .message-copy {
     max-width: 58ch;
     padding: .62rem .78rem;
@@ -538,6 +616,142 @@ header[data-testid="stHeader"] {
 .context-stack {
     display: grid;
     gap: 1.05rem;
+    position: sticky;
+    top: 4.7rem;
+    max-height: calc(100vh - 5.4rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 .25rem .15rem 0;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--accent) 30%, var(--line)) transparent;
+}
+
+.context-stack .day-timeline {
+    min-height: 0;
+    height: clamp(28rem, calc(100vh - 24rem), 42rem);
+}
+
+.context-stack .cal-hours,
+.context-stack .cal-grid {
+    grid-template-rows: repeat(24, minmax(0, 1fr));
+}
+
+.context-stack .cal-event {
+    min-height: 1.45rem;
+    padding: .24rem .42rem;
+}
+
+.context-stack .cal-event-time {
+    font-size: .6rem;
+    margin-bottom: .08rem;
+}
+
+.context-stack .cal-event-title {
+    font-size: .7rem;
+    line-height: 1.1;
+}
+
+.context-stack::-webkit-scrollbar {
+    width: .46rem;
+}
+
+.context-stack::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.context-stack::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--accent) 28%, var(--line));
+    border-radius: 999px;
+}
+
+.st-key-main_workspace {
+    min-height: 0;
+}
+
+.st-key-main_workspace > [data-testid="stVerticalBlock"],
+.st-key-main_workspace > div > [data-testid="stVerticalBlock"] {
+    min-height: 0;
+}
+
+.st-key-metrics_dock {
+    margin-top: .8rem;
+    padding-top: 0;
+}
+
+.st-key-side_workspace {
+    height: calc(100vh - 5.4rem);
+    min-height: 0;
+    overflow: hidden;
+}
+
+.st-key-calendar_panel,
+.st-key-todo_panel {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.st-key-calendar_panel {
+    height: min(56vh, 31rem);
+}
+
+.st-key-todo_panel {
+    height: min(24vh, 14rem);
+    margin-top: .85rem;
+}
+
+.st-key-calendar_panel [data-testid="stVerticalBlock"] {
+    height: 100%;
+}
+
+.st-key-calendar_panel .rail-section,
+.st-key-todo_panel .rail-section {
+    padding-top: 0;
+}
+
+.st-key-calendar_panel .day-timeline {
+    min-height: 0;
+    height: calc(100% - 2.05rem);
+}
+
+.st-key-calendar_panel .cal-hours,
+.st-key-calendar_panel .cal-grid {
+    grid-template-rows: repeat(24, minmax(.8rem, 1fr));
+}
+
+.st-key-calendar_panel .cal-event {
+    min-height: 1.45rem;
+    padding: .24rem .42rem;
+}
+
+.st-key-calendar_panel .cal-event-time {
+    font-size: .6rem;
+    margin-bottom: .08rem;
+}
+
+.st-key-calendar_panel .cal-event-title {
+    font-size: .7rem;
+    line-height: 1.1;
+}
+
+.st-key-todo_panel [data-testid="stVerticalBlockBorderWrapper"] {
+    height: calc(100% - 2.45rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--accent) 30%, var(--line)) transparent;
+}
+
+.st-key-todo_panel [data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar {
+    width: .46rem;
+}
+
+.st-key-todo_panel [data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.st-key-todo_panel [data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--accent) 28%, var(--line));
+    border-radius: 999px;
 }
 
 .rail-section {
@@ -563,11 +777,13 @@ header[data-testid="stHeader"] {
 }
 
 [data-testid="stForm"] {
-    margin-top: 1.05rem;
+    margin-top: .9rem;
     padding: .64rem;
     border: 1px solid var(--line);
     border-radius: 8px;
     background: color-mix(in oklch, var(--panel) 88%, var(--surface));
+    position: static;
+    box-shadow: none;
 }
 
 [data-testid="stForm"] [data-testid="stTextInput"] input {
@@ -654,8 +870,15 @@ header[data-testid="stHeader"] {
     }
 
     .chat-thread {
-        min-height: 10rem;
-        max-height: 50vh;
+        height: clamp(14rem, calc(100vh - 25rem), 24rem);
+    }
+
+    .context-stack,
+    [data-testid="stForm"] {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        box-shadow: none;
     }
 }
 </style>
@@ -673,6 +896,10 @@ TOOL_LABELS = {
     "save_conversation_log": "Conversation log",
     "get_daily_plan": "Daily plan",
     "save_daily_plan": "Daily plan",
+    "get_daily_tasks": "Daily tasks",
+    "save_daily_tasks": "Daily tasks",
+    "set_daily_task_completion": "Daily tasks",
+    "set_daily_subtask_completion": "Daily tasks",
     "log_habit": "Habits",
     "get_habit_streaks": "Habits",
     "update_habit_streaks": "Habits",
@@ -685,13 +912,17 @@ LOCAL_TOOLS = [
     save_conversation_log,
     get_daily_plan,
     save_daily_plan,
+    get_daily_tasks,
+    save_daily_tasks,
+    set_daily_task_completion,
+    set_daily_subtask_completion,
     log_habit,
     get_habit_streaks,
     update_habit_streaks,
 ]
 
 NAV_ITEMS = ["Coach", "Plan", "Calendar", "Habits", "Notes", "Sources", "Settings"]
-MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False})
+MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table")
 
 
 def _run_async(coro):
@@ -858,6 +1089,16 @@ def get_plan_preview(day: str) -> str:
 
 
 @st.cache_data(ttl=30, show_spinner=False)
+def get_task_preview(day: str) -> list[dict[str, Any]]:
+    raw = get_daily_tasks.invoke({"date": day})
+    parsed = _parse_json_or_none(raw)
+    if not isinstance(parsed, dict):
+        return []
+    tasks = parsed.get("tasks", [])
+    return tasks if isinstance(tasks, list) else []
+
+
+@st.cache_data(ttl=30, show_spinner=False)
 def get_habit_preview() -> dict[str, Any]:
     raw = get_habit_streaks.invoke({})
     parsed = _parse_json_or_none(raw)
@@ -941,35 +1182,124 @@ def _plan_lines(plan_text: str) -> list[str]:
     return [line for line in lines if line][:7]
 
 
+def _flat_todos(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    todos = []
+    for task in tasks:
+        if task.get("id"):
+            todos.append(
+                {
+                    "id": task["id"],
+                    "kind": "task",
+                    "title": str(task.get("title", "Untitled")),
+                    "completed": bool(task.get("completed")),
+                }
+            )
+        subtasks = task.get("subtasks", [])
+        if isinstance(subtasks, list):
+            for subtask in subtasks:
+                if subtask.get("id"):
+                    todos.append(
+                        {
+                            "id": subtask["id"],
+                            "kind": "subtask",
+                            "title": str(subtask.get("title", "Untitled")),
+                            "completed": bool(subtask.get("completed")),
+                        }
+                    )
+    return todos
+
+
+def _task_counts(tasks: list[dict[str, Any]]) -> tuple[int, int]:
+    todos = _flat_todos(tasks)
+    return sum(1 for todo in todos if todo["completed"]), len(todos)
+
+
 def plan_html(day: str) -> str:
-    lines = _plan_lines(get_plan_preview(day))
-    meta = "not set" if not lines else f"{len(lines)} step{'s' if len(lines) != 1 else ''}"
+    tasks = get_task_preview(day)
+    completed, total = _task_counts(tasks)
+    meta = "not set" if not tasks else f"{completed}/{total} done"
     head = (
         '<div class="rail-head">'
         '<p class="section-title">Daily plan</p>'
         f'<span class="rail-meta">{meta}</span>'
         "</div>"
     )
-    if not lines:
-        return head + '<div class="empty-note">No saved plan yet. Ask Bud to plan the day.</div>'
+    if not tasks:
+        return (
+            head
+            + '<div class="empty-note">No todo plan saved yet. Agree on a plan with Bud, '
+            + "then it will appear here as tasks.</div>"
+        )
 
     rows = "".join(
-        (
-            '<div class="plan-row"><span class="dot"></span>'
-            f'<span>{html.escape(line)}</span></div>'
-        )
-        for line in lines
+        '<div class="plan-row"><span class="dot"></span>'
+        f'<span>{html.escape(todo["title"])}</span></div>'
+        for todo in _flat_todos(tasks)[:8]
     )
     return f'{head}<div class="plan-list">{rows}</div>'
 
 
+def _sync_task_completion(task_id: Any, completed: bool) -> None:
+    set_daily_task_completion.invoke({"task_id": int(task_id), "completed": completed})
+    st.cache_data.clear()
+    st.rerun()
+
+
+def _sync_subtask_completion(subtask_id: Any, completed: bool) -> None:
+    set_daily_subtask_completion.invoke(
+        {"subtask_id": int(subtask_id), "completed": completed}
+    )
+    st.cache_data.clear()
+    st.rerun()
+
+
+def _toggle_todo(todo: dict[str, Any], completed: bool) -> None:
+    if todo["kind"] == "subtask":
+        _sync_subtask_completion(todo["id"], completed)
+    else:
+        _sync_task_completion(todo["id"], completed)
+
+
+def render_todo_plan(day: str, *, compact: bool = False) -> None:
+    tasks = get_task_preview(day)
+    todos = _flat_todos(tasks)
+    completed = sum(1 for todo in todos if todo["completed"])
+    title = "Daily plan"
+    meta = "not set" if not todos else f"{completed}/{len(todos)} done"
+    st.html(
+        f"""
+<section class="rail-section">
+    <div class="rail-head">
+        <p class="section-title">{title}</p>
+        <span class="rail-meta">{meta}</span>
+    </div>
+</section>
+"""
+    )
+
+    if not todos:
+        st.html(
+            '<div class="empty-note">No todo plan saved yet. Agree on a plan with Bud, '
+            "then it will appear here as tasks.</div>"
+        )
+        return
+
+    todo_container = st.container(height=168 if compact else None, border=True)
+    with todo_container:
+        for todo in todos:
+            key = f"{'compact_' if compact else 'plan_'}todo_{todo['kind']}_{todo['id']}"
+            checked = st.checkbox(todo["title"], value=todo["completed"], key=key)
+            if checked != todo["completed"]:
+                _toggle_todo(todo, checked)
+
+
 def render_plan(day: str) -> None:
-    st.html(plan_html(day))
+    render_todo_plan(day, compact=False)
 
 
 def _habit_metrics(day: str) -> list[dict[str, str | int]]:
     habits = get_habit_preview()
-    plan_exists = bool(_plan_lines(get_plan_preview(day)))
+    plan_exists = bool(get_task_preview(day) or _plan_lines(get_plan_preview(day)))
 
     if habits:
         completion_rates = [
@@ -1049,6 +1379,7 @@ def send_to_agent(prompt: str) -> tuple[str, list[str]]:
 
 def queue_prompt(prompt: str) -> None:
     st.session_state.pending_prompt = prompt
+    st.rerun()
 
 
 def set_active_view(view: str) -> None:
@@ -1117,7 +1448,7 @@ def render_input_panel() -> str | None:
         with send_col:
             submitted = st.form_submit_button("Send", use_container_width=True)
     if submitted and typed.strip():
-        return typed.strip()
+        queue_prompt(typed.strip())
     return None
 
 
@@ -1221,7 +1552,31 @@ if "pending_prompt" not in st.session_state:
 if "active_view" not in st.session_state:
     st.session_state.active_view = "Coach"
 
-prompt = st.session_state.pending_prompt
+prompt_to_process = st.session_state.pending_prompt
+if prompt_to_process:
+    st.session_state.pending_prompt = None
+    st.session_state.messages.append(
+        {"role": "user", "content": prompt_to_process, "sources": []}
+    )
+    with st.status("Grounding the answer", expanded=True) as status:
+        st.write("Checking calendar, plan, habits, and memory.")
+        try:
+            output, sources = send_to_agent(prompt_to_process)
+            status.update(label="Answer ready", state="complete", expanded=False)
+        except Exception as exc:
+            output = (
+                "I could not complete that run. Check the model provider settings "
+                f"and Calendar credentials.\n\n`{exc}`"
+            )
+            sources = []
+            status.update(label="Run failed", state="error", expanded=False)
+
+    st.session_state.messages.append(
+        {"role": "assistant", "content": output, "sources": sources}
+    )
+    remember_later(prompt_to_process)
+    st.cache_data.clear()
+    st.rerun()
 
 with st.sidebar:
     st.html(
@@ -1246,32 +1601,32 @@ with st.sidebar:
 main_col, side_col = st.columns([0.64, 0.36], gap="large")
 
 with main_col:
-    active_view = st.session_state.active_view
-    render_header(active_view)
+    with st.container(key="main_workspace"):
+        active_view = st.session_state.active_view
+        render_header(active_view)
 
-    if active_view == "Coach":
-        render_quick_actions()
-        render_chat()
-        typed_prompt = render_input_panel()
-        prompt = prompt or typed_prompt
-    elif active_view == "Plan":
-        st.html(
-            """
+        if active_view == "Coach":
+            render_quick_actions()
+            render_chat()
+            render_input_panel()
+        elif active_view == "Plan":
+            st.html(
+                """
 <div class="view-panel">
     <h2>Today&apos;s plan</h2>
     <p class="view-copy">
-        This is the saved plan Bud can revise through conversation. The chat
-        remains the editing surface for now.
+        This is the agreed plan for today. Bud saves it as todo tasks, and
+        checking items here updates the same list shown in the side rail.
     </p>
 </div>
 """
-        )
-        render_plan(today)
-        if st.button("Ask Bud to update this plan", use_container_width=True):
-            queue_prompt("Review and update today's saved plan using my current calendar.")
-    elif active_view == "Calendar":
-        st.html(
-            """
+            )
+            render_plan(today)
+            if st.button("Ask Bud to update this plan", use_container_width=True):
+                queue_prompt("Review and update today's saved plan using my current calendar.")
+        elif active_view == "Calendar":
+            st.html(
+                """
 <div class="view-panel">
     <h2>What&apos;s ahead</h2>
     <p class="view-copy">
@@ -1279,11 +1634,11 @@ with main_col:
     </p>
 </div>
 """
-        )
-        render_calendar(today)
-    elif active_view == "Habits":
-        st.html(
-            """
+            )
+            render_calendar(today)
+        elif active_view == "Habits":
+            st.html(
+                """
 <div class="view-panel">
     <h2>Accountability</h2>
     <p class="view-copy">
@@ -1292,48 +1647,22 @@ with main_col:
     </p>
 </div>
 """
-        )
-        render_metric_strip(today)
-        if st.button("Run evening reflection", use_container_width=True):
-            queue_prompt("Guide me through an evening reflection and update my habits.")
-    elif active_view == "Notes":
-        render_notes_view()
-    elif active_view == "Sources":
-        render_sources_view()
-    elif active_view == "Settings":
-        render_settings_view()
+            )
+            if st.button("Run evening reflection", use_container_width=True):
+                queue_prompt("Guide me through an evening reflection and update my habits.")
+        elif active_view == "Notes":
+            render_notes_view()
+        elif active_view == "Sources":
+            render_sources_view()
+        elif active_view == "Settings":
+            render_settings_view()
+
+        with st.container(key="metrics_dock"):
+            render_metric_strip(today)
 
 with side_col:
-    if st.session_state.active_view == "Calendar":
-        render_context_stack(today, calendar_first=False)
-    else:
-        render_context_stack(today, calendar_first=True)
-
-if st.session_state.active_view != "Habits":
-    render_metric_strip(today)
-
-prompt = prompt or st.session_state.pending_prompt
-st.session_state.pending_prompt = None
-
-if prompt:
-    st.session_state.messages.append({"role": "user", "content": prompt, "sources": []})
-
-    with st.status("Grounding the answer", expanded=True) as status:
-        st.write("Checking calendar, plan, habits, and memory.")
-        try:
-            output, sources = send_to_agent(prompt)
-            status.update(label="Answer ready", state="complete", expanded=False)
-        except Exception as exc:
-            output = (
-                "I could not complete that run. Check the model provider settings "
-                f"and Calendar credentials.\n\n`{exc}`"
-            )
-            sources = []
-            status.update(label="Run failed", state="error", expanded=False)
-
-    st.session_state.messages.append(
-        {"role": "assistant", "content": output, "sources": sources}
-    )
-    remember_later(prompt)
-    st.cache_data.clear()
-    st.rerun()
+    with st.container(key="side_workspace"):
+        with st.container(key="calendar_panel"):
+            render_calendar(today)
+        with st.container(key="todo_panel"):
+            render_todo_plan(today, compact=True)
