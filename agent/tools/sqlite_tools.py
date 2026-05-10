@@ -3,6 +3,7 @@ import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from langchain_core.tools import tool
 
@@ -38,6 +39,25 @@ def init_db() -> None:
             calendar_snapshot TEXT
         );
 
+        CREATE TABLE IF NOT EXISTS daily_tasks (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            date        TEXT NOT NULL,
+            title       TEXT NOT NULL,
+            completed   INTEGER NOT NULL DEFAULT 0,
+            sort_order  INTEGER NOT NULL DEFAULT 0,
+            created_at  TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS daily_subtasks (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_id     INTEGER NOT NULL,
+            title       TEXT NOT NULL,
+            completed   INTEGER NOT NULL DEFAULT 0,
+            sort_order  INTEGER NOT NULL DEFAULT 0,
+            created_at  TEXT NOT NULL,
+            FOREIGN KEY(task_id) REFERENCES daily_tasks(id) ON DELETE CASCADE
+        );
+
         CREATE TABLE IF NOT EXISTS habit_streaks (
             habit_name      TEXT PRIMARY KEY,
             current_streak  INTEGER DEFAULT 0,
@@ -48,8 +68,112 @@ def init_db() -> None:
         );
         """
     )
+    _flatten_existing_subtasks(connection)
     connection.commit()
     connection.close()
+
+
+def _flatten_existing_subtasks(connection: sqlite3.Connection) -> None:
+    subtask_rows = connection.execute(
+        """
+        SELECT
+            daily_subtasks.id,
+            daily_subtasks.task_id,
+            daily_subtasks.title,
+            daily_subtasks.completed,
+            daily_subtasks.sort_order,
+            daily_subtasks.created_at,
+            daily_tasks.date,
+            daily_tasks.sort_order AS task_sort_order
+        FROM daily_subtasks
+        JOIN daily_tasks ON daily_tasks.id = daily_subtasks.task_id
+        ORDER BY daily_tasks.date, daily_tasks.sort_order, daily_subtasks.sort_order
+        """
+    ).fetchall()
+    if not subtask_rows:
+        return
+
+    parent_ids = sorted({row["task_id"] for row in subtask_rows})
+    placeholders = ",".join("?" for _ in parent_ids)
+    connection.execute(
+        f"UPDATE daily_tasks SET sort_order = sort_order * 100 WHERE id IN ({placeholders})",
+        parent_ids,
+    )
+
+    for row in subtask_rows:
+        connection.execute(
+            """
+            INSERT INTO daily_tasks (date, title, completed, sort_order, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                row["date"],
+                row["title"],
+                row["completed"],
+                (row["task_sort_order"] * 100) + row["sort_order"] + 1,
+                row["created_at"],
+            ),
+        )
+
+    connection.execute("DELETE FROM daily_subtasks")
+
+
+def _normalize_daily_tasks(tasks_json: str) -> list[dict[str, Any]]:
+    parsed = json.loads(tasks_json)
+    if isinstance(parsed, dict):
+        parsed = parsed.get("tasks", [])
+    if not isinstance(parsed, list):
+        raise ValueError("tasks_json must be a JSON list or an object with a tasks list.")
+
+    tasks = []
+    for task_index, raw_task in enumerate(parsed):
+        if isinstance(raw_task, str):
+            raw_task = {"title": raw_task, "subtasks": []}
+        if not isinstance(raw_task, dict):
+            continue
+
+        title = str(raw_task.get("title", "")).strip()
+        if not title:
+            continue
+
+        raw_subtasks = raw_task.get("subtasks", [])
+
+        tasks.append(
+            {
+                "title": title,
+                "completed": bool(raw_task.get("completed", False)),
+                "sort_order": int(raw_task.get("sort_order", task_index * 100)),
+                "subtasks": [],
+            }
+        )
+        if isinstance(raw_subtasks, list):
+            for subtask_index, raw_subtask in enumerate(raw_subtasks):
+                if isinstance(raw_subtask, str):
+                    raw_subtask = {"title": raw_subtask}
+                if not isinstance(raw_subtask, dict):
+                    continue
+
+                subtask_title = str(raw_subtask.get("title", "")).strip()
+                if not subtask_title:
+                    continue
+                tasks.append(
+                    {
+                        "title": subtask_title,
+                        "completed": bool(raw_subtask.get("completed", False)),
+                        "sort_order": (task_index * 100) + subtask_index + 1,
+                        "subtasks": [],
+                    }
+                )
+    return tasks
+
+
+def _tasks_to_plan_text(tasks: list[dict[str, Any]]) -> str:
+    lines = []
+    for task in tasks:
+        lines.append(str(task["title"]))
+        for subtask in task.get("subtasks", []):
+            lines.append(f"  - {subtask['title']}")
+    return "\n".join(lines)
 
 
 @tool
@@ -89,6 +213,174 @@ def save_daily_plan(date: str, plan_text: str, calendar_snapshot: str = "") -> s
     connection.commit()
     connection.close()
     return "saved"
+
+
+@tool
+def get_daily_tasks(date: str) -> str:
+    """Get structured daily tasks and subtasks for a date in YYYY-MM-DD format."""
+    init_db()
+    connection = get_connection()
+    task_rows = connection.execute(
+        """
+        SELECT id, date, title, completed, sort_order
+        FROM daily_tasks
+        WHERE date = ?
+        ORDER BY sort_order, id
+        """,
+        (date,),
+    ).fetchall()
+    if not task_rows:
+        connection.close()
+        return "No tasks found"
+
+    task_ids = [row["id"] for row in task_rows]
+    placeholders = ",".join("?" for _ in task_ids)
+    subtask_rows = connection.execute(
+        f"""
+        SELECT id, task_id, title, completed, sort_order
+        FROM daily_subtasks
+        WHERE task_id IN ({placeholders})
+        ORDER BY sort_order, id
+        """,
+        task_ids,
+    ).fetchall()
+    connection.close()
+
+    subtasks_by_task: dict[int, list[dict[str, Any]]] = {}
+    for row in subtask_rows:
+        subtasks_by_task.setdefault(row["task_id"], []).append(
+            {
+                "id": row["id"],
+                "title": row["title"],
+                "completed": bool(row["completed"]),
+                "sort_order": row["sort_order"],
+            }
+        )
+
+    tasks = [
+        {
+            "id": row["id"],
+            "date": row["date"],
+            "title": row["title"],
+            "completed": bool(row["completed"]),
+            "sort_order": row["sort_order"],
+            "subtasks": subtasks_by_task.get(row["id"], []),
+        }
+        for row in task_rows
+    ]
+    return json.dumps({"date": date, "tasks": tasks})
+
+
+@tool
+def save_daily_tasks(
+    date: str,
+    tasks_json: str,
+    calendar_snapshot: str = "",
+) -> str:
+    """Save or overwrite structured daily tasks for a date.
+
+    tasks_json should be JSON like:
+    [{"title": "Study NLP", "completed": false}]
+    If subtasks are provided, they are flattened into regular todo tasks.
+    """
+    init_db()
+    tasks = _normalize_daily_tasks(tasks_json)
+    now = datetime.now().isoformat(timespec="seconds")
+    plan_text = _tasks_to_plan_text(tasks)
+
+    connection = get_connection()
+    old_task_rows = connection.execute(
+        "SELECT id FROM daily_tasks WHERE date = ?",
+        (date,),
+    ).fetchall()
+    old_task_ids = [row["id"] for row in old_task_rows]
+    if old_task_ids:
+        placeholders = ",".join("?" for _ in old_task_ids)
+        connection.execute(
+            f"DELETE FROM daily_subtasks WHERE task_id IN ({placeholders})",
+            old_task_ids,
+        )
+    connection.execute("DELETE FROM daily_tasks WHERE date = ?", (date,))
+
+    connection.execute(
+        """
+        INSERT INTO daily_plans (date, plan_text, created_at, calendar_snapshot)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(date) DO UPDATE SET
+            plan_text = excluded.plan_text,
+            created_at = excluded.created_at,
+            calendar_snapshot = excluded.calendar_snapshot
+        """,
+        (date, plan_text, now, calendar_snapshot),
+    )
+
+    for task in tasks:
+        cursor = connection.execute(
+            """
+            INSERT INTO daily_tasks (date, title, completed, sort_order, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (
+                date,
+                task["title"],
+                1 if task["completed"] else 0,
+                task["sort_order"],
+                now,
+            ),
+        )
+        task_id = cursor.lastrowid
+        for subtask in task["subtasks"]:
+            connection.execute(
+                """
+                INSERT INTO daily_subtasks (
+                    task_id,
+                    title,
+                    completed,
+                    sort_order,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    task_id,
+                    subtask["title"],
+                    1 if subtask["completed"] else 0,
+                    subtask["sort_order"],
+                    now,
+                ),
+            )
+
+    connection.commit()
+    connection.close()
+    return "saved"
+
+
+@tool
+def set_daily_task_completion(task_id: int, completed: bool) -> str:
+    """Set completion for one top-level daily task."""
+    init_db()
+    connection = get_connection()
+    connection.execute(
+        "UPDATE daily_tasks SET completed = ? WHERE id = ?",
+        (1 if completed else 0, task_id),
+    )
+    connection.commit()
+    connection.close()
+    return "updated"
+
+
+@tool
+def set_daily_subtask_completion(subtask_id: int, completed: bool) -> str:
+    """Set completion for one daily subtask."""
+    init_db()
+    connection = get_connection()
+    connection.execute(
+        "UPDATE daily_subtasks SET completed = ? WHERE id = ?",
+        (1 if completed else 0, subtask_id),
+    )
+    connection.commit()
+    connection.close()
+    return "updated"
 
 
 @tool
