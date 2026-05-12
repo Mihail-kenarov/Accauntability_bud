@@ -703,8 +703,7 @@ header[data-testid="stHeader"] {
     height: 100%;
 }
 
-.st-key-calendar_panel .rail-section,
-.st-key-todo_panel .rail-section {
+.st-key-calendar_panel .rail-section {
     padding-top: 0;
 }
 
@@ -733,12 +732,77 @@ header[data-testid="stHeader"] {
     line-height: 1.1;
 }
 
+.st-key-todo_panel > [data-testid="stVerticalBlock"] {
+    height: 100%;
+    gap: 0;
+}
+
 .st-key-todo_panel [data-testid="stVerticalBlockBorderWrapper"] {
-    height: calc(100% - 2.45rem);
+    height: 100%;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in oklch, var(--accent) 30%, var(--line)) transparent;
+}
+
+.st-key-todo_panel [data-testid="stVerticalBlockBorderWrapper"] > [data-testid="stVerticalBlock"] {
+    gap: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+.st-key-todo_panel [data-testid="stHtml"] {
+    margin: 0;
+    padding: 0;
+}
+
+.plan-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .68rem .9rem;
+    border-bottom: 1px solid var(--line);
+    line-height: 1.2;
+}
+
+.st-key-todo_panel [data-testid="stCheckbox"] {
+    padding: .48rem .9rem;
+    border-bottom: 1px solid color-mix(in oklch, var(--line) 55%, transparent);
+    margin: 0;
+}
+
+.st-key-todo_panel [data-testid="stCheckbox"]:last-of-type {
+    border-bottom: none;
+}
+
+.st-key-todo_panel [data-testid="stCheckbox"] label {
+    align-items: center;
+    gap: .55rem;
+    background: transparent !important;
+}
+
+.st-key-todo_panel [data-testid="stCheckbox"] p {
+    color: var(--text);
+    font-size: .84rem;
+    line-height: 1.3;
+    margin: 0;
+    transition: color 180ms cubic-bezier(.22,1,.36,1);
+}
+
+.st-key-todo_panel [data-testid="stCheckbox"] label:has(input:checked) > span {
+    background: var(--accent) !important;
+    border-color: var(--accent) !important;
+}
+
+.st-key-todo_panel [data-testid="stCheckbox"] label > div {
+    background: transparent !important;
+}
+
+.st-key-todo_panel [data-testid="stCheckbox"]:has(input:checked) p {
+    color: var(--muted) !important;
+    text-decoration: line-through;
+    text-decoration-color: color-mix(in oklch, var(--muted) 55%, transparent);
 }
 
 .st-key-todo_panel [data-testid="stVerticalBlockBorderWrapper"]::-webkit-scrollbar {
@@ -1264,28 +1328,23 @@ def render_todo_plan(day: str, *, compact: bool = False) -> None:
     tasks = get_task_preview(day)
     todos = _flat_todos(tasks)
     completed = sum(1 for todo in todos if todo["completed"])
-    title = "Daily plan"
     meta = "not set" if not todos else f"{completed}/{len(todos)} done"
-    st.html(
-        f"""
-<section class="rail-section">
-    <div class="rail-head">
-        <p class="section-title">{title}</p>
-        <span class="rail-meta">{meta}</span>
-    </div>
-</section>
-"""
-    )
 
-    if not todos:
-        st.html(
-            '<div class="empty-note">No todo plan saved yet. Agree on a plan with Bud, '
-            "then it will appear here as tasks.</div>"
-        )
-        return
-
-    todo_container = st.container(height=168 if compact else None, border=True)
+    todo_container = st.container(border=True)
     with todo_container:
+        st.html(
+            f'<div class="plan-card-head">'
+            f'<p class="section-title">Daily plan</p>'
+            f'<span class="rail-meta">{meta}</span>'
+            f"</div>"
+        )
+        if not todos:
+            st.html(
+                '<div class="empty-note" style="margin:.6rem .9rem .7rem;">'
+                "No todo plan saved yet. Agree on a plan with Bud, "
+                "then it will appear here as tasks.</div>"
+            )
+            return
         for todo in todos:
             key = f"{'compact_' if compact else 'plan_'}todo_{todo['kind']}_{todo['id']}"
             checked = st.checkbox(todo["title"], value=todo["completed"], key=key)
