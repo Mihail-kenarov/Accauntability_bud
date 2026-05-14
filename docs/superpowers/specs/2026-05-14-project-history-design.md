@@ -31,7 +31,23 @@ The brand personality is deliberate: calm, direct, and honest. No confetti, no b
 
 ---
 
-## 3. Technology Choices
+## 3. Core Functionalities
+
+### Morning Planning
+
+The primary use case. The user opens the app and asks the agent to plan the day. The agent reads the current Google Calendar events, retrieves relevant facts it has learned about the user from past conversations (training schedule, goals, recurring constraints), checks the current habit streaks, and generates a realistic time-blocked plan. The plan is saved to the database so it can be referenced later in the day. This is where the grounding matters most - the agent cannot suggest a gym session at 10:00 if there is already a lecture on the calendar at that time.
+
+### Mid-Day Check-In
+
+Life rarely goes exactly to plan. The mid-day check-in handles the moments when things change - the user skipped the gym, work ended early, energy is low, or something unexpected came up. The agent retrieves the morning plan, takes in what the user reports, and helps adjust the rest of the day without judgment. The goal is to keep the user moving forward with a realistic revised plan rather than treating a deviation as a failure.
+
+### Evening Reflection
+
+At the end of the day the user reports back - what they did, what they skipped, how the day went. The agent extracts habit completions from the user's free-text response (did they train, stay on calories, read in the morning), logs each habit to the database, updates the streaks, and saves a summary of the session to long-term memory. The response includes what went well, an honest acknowledgment of what slipped, and one concrete suggestion for the next day. This session summary is what gets retrieved the following morning to inform the new plan.
+
+---
+
+## 4. Technology Choices
 
 Every technology in this project was chosen for a specific reason. Several were recommended directly in the NLP assignment brief; others were chosen after weighing alternatives.
 
@@ -65,7 +81,7 @@ Streamlit was chosen for the frontend because it is fast to build with, mobile-a
 
 ---
 
-## 4. Iteration One: The First Working Version
+## 5. Iteration One: The First Working Version
 
 The project started with a clear architecture in mind: a LangChain agent wrapping a local Ollama LLM, all backend tools built and tested, and a Streamlit frontend wiring it all together. The initial model choice was `ministral-3b` running locally via Ollama - free, private, and requiring no API key.
 
@@ -82,7 +98,7 @@ The first iteration was a genuine success: Ollama connected to the Streamlit fro
 
 ---
 
-## 5. Iteration Two: Switching the LLM Provider
+## 6. Iteration Two: Switching the LLM Provider
 
 The VRAM constraint had a straightforward solution: move the LLM to the cloud and free up local resources for the speech-to-text model. OpenRouter was integrated as the new LLM provider, replacing the direct Ollama connection.
 
@@ -92,7 +108,7 @@ The application remained functionally identical to iteration one. The only chang
 
 ---
 
-## 6. Iteration Three: UI Polish and Data Model Improvements
+## 7. Iteration Three: UI Polish and Data Model Improvements
 
 With the LLM provider stable, the third iteration focused on making the app genuinely pleasant and useful to interact with daily.
 
@@ -106,7 +122,7 @@ With the LLM provider stable, the third iteration focused on making the app genu
 
 ---
 
-## 7. Validation Strategy
+## 8. Validation Strategy
 
 The NLP assignment asks how you ensure an app is trustworthy given the probabilistic nature of LLMs. Several deliberate decisions address this:
 
@@ -124,7 +140,7 @@ The NLP assignment asks how you ensure an app is trustworthy given the probabili
 
 ---
 
-## 8. Possible Future Additions
+## 9. Possible Future Additions
 
 Several natural next steps were considered but not yet implemented:
 
