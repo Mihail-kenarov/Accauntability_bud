@@ -21,11 +21,11 @@ The formal design challenge statement for this project is:
 
 Accountability Bud is a conversational life coach web app built for a busy student with an irregular schedule, training commitments, calorie goals, and a need for a private accountability partner. It is not a generic chatbot - it knows your real calendar, remembers facts about you across sessions, tracks your habits over time, and uses all of that context to give grounded coaching instead of vague motivational advice.
 
-The app is designed around three daily use patterns:
+The app is designed around three core functionalities:
 
-- **Morning planning** - the agent reads your Google Calendar, pulls relevant facts it has learned about you, checks your habit streaks, and generates a realistic time-blocked plan for the day
-- **Mid-day check-ins** - when life changes (you skipped the gym, work ended early, plans shifted), the agent retrieves the morning plan and helps you adjust without judgment
-- **Evening reflection** - the user reports what they did, the agent extracts habit completions from free text, logs them to a database, updates streaks, and saves a session summary for future reference
+- **Planning** - the agent reads your Google Calendar, pulls relevant facts it has learned about you, checks your habit streaks, and generates a realistic time-blocked plan for the day
+- **Check-in** - when life changes (you skipped the gym, work ended early, plans shifted), the agent retrieves the current plan and helps you adjust without judgment
+- **Reflection** - the user reports what they did, the agent extracts habit completions from free text, logs them to a database, updates streaks, and saves a session summary for future reference
 
 The brand personality is deliberate: calm, direct, and honest. No confetti, no badges, no gamification. Streaks are shown as plain numbers. Plans are presented as honest time blocks. The design borrows from the ledger book and the personal planner - a trusted daily tool, not a productivity app trying to motivate you with visual noise.
 
@@ -33,17 +33,17 @@ The brand personality is deliberate: calm, direct, and honest. No confetti, no b
 
 ## 3. Core Functionalities
 
-### Morning Planning
+### Planning
 
-The primary use case. The user opens the app and asks the agent to plan the day. The agent reads the current Google Calendar events, retrieves relevant facts it has learned about the user from past conversations (training schedule, goals, recurring constraints), checks the current habit streaks, and generates a realistic time-blocked plan. The plan is saved to the database so it can be referenced later in the day. This is where the grounding matters most - the agent cannot suggest a gym session at 10:00 if there is already a lecture on the calendar at that time.
+The primary use case. The user asks the agent to plan the day. The agent reads the current Google Calendar events, retrieves relevant facts it has learned about the user from past conversations (training schedule, goals, recurring constraints), checks the current habit streaks, and generates a realistic time-blocked plan. The plan is saved to the database so it can be referenced later. This is where the grounding matters most - the agent cannot suggest a gym session at 10:00 if there is already a lecture on the calendar at that time.
 
-### Mid-Day Check-In
+### Check-In
 
-Life rarely goes exactly to plan. The mid-day check-in handles the moments when things change - the user skipped the gym, work ended early, energy is low, or something unexpected came up. The agent retrieves the morning plan, takes in what the user reports, and helps adjust the rest of the day without judgment. The goal is to keep the user moving forward with a realistic revised plan rather than treating a deviation as a failure.
+Life rarely goes exactly to plan. The check-in handles the moments when things change - the user skipped the gym, work ended early, energy is low, or something unexpected came up. The agent retrieves the current plan, takes in what the user reports, and helps adjust the rest of the day without judgment. The goal is to keep the user moving forward with a realistic revised plan rather than treating a deviation as a failure.
 
-### Evening Reflection
+### Reflection
 
-At the end of the day the user reports back - what they did, what they skipped, how the day went. The agent extracts habit completions from the user's free-text response (did they train, stay on calories, read in the morning), logs each habit to the database, updates the streaks, and saves a summary of the session to long-term memory. The response includes what went well, an honest acknowledgment of what slipped, and one concrete suggestion for the next day. This session summary is what gets retrieved the following morning to inform the new plan.
+The user reports back on their day - what they did, what they skipped, how it went. The agent extracts habit completions from the user's free-text response (did they train, stay on calories, read), logs each habit to the database, updates the streaks, and saves a summary of the session to long-term memory. The response includes what went well, an honest acknowledgment of what slipped, and one concrete suggestion for the next day. This session summary is retrieved the next time the user asks for a plan, closing the loop.
 
 ---
 
