@@ -428,6 +428,48 @@ header[data-testid="stHeader"] {
     animation: chipIn 200ms cubic-bezier(.22,1,.36,1) both;
 }
 
+.thinking-row {
+    display: flex;
+    gap: .78rem;
+    align-items: flex-start;
+    max-width: 74ch;
+    margin: 0 0 .92rem;
+    color: var(--muted);
+}
+
+.thinking-card {
+    width: min(100%, 34rem);
+    padding: .78rem .9rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: color-mix(in oklch, var(--panel) 84%, var(--surface));
+}
+
+.thinking-title {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    color: var(--text);
+    font-size: .84rem;
+    line-height: 1.2;
+    font-weight: 680;
+}
+
+.thinking-dot {
+    width: .46rem;
+    height: .46rem;
+    border-radius: 999px;
+    background: var(--accent);
+    animation: thinkingPulse 1.15s cubic-bezier(.22,1,.36,1) infinite;
+}
+
+.thinking-copy {
+    margin: .45rem 0 0;
+    color: var(--muted);
+    font-size: .84rem;
+    line-height: 1.45;
+}
+
 .metric-strip {
     margin-top: .8rem;
     border-top: 0;
@@ -905,6 +947,11 @@ header[data-testid="stHeader"] {
 @keyframes chipIn {
     from { opacity: 0; transform: translateY(3px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes thinkingPulse {
+    0%, 100% { opacity: .38; transform: scale(.88); }
+    50% { opacity: 1; transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1438,6 +1485,7 @@ def send_to_agent(prompt: str) -> tuple[str, list[str]]:
 
 def queue_prompt(prompt: str) -> None:
     st.session_state.pending_prompt = prompt
+    st.session_state.active_view = "Coach"
     st.rerun()
 
 
@@ -1495,7 +1543,7 @@ def render_chat() -> None:
     st.html(f'<div class="chat-thread">{rows}</div>')
 
 
-def render_input_panel() -> str | None:
+def render_input_panel(disabled: bool = False) -> str | None:
     with st.form("coach_message_form", clear_on_submit=True):
         input_col, send_col = st.columns([0.82, 0.18], gap="small")
         with input_col:
@@ -1503,12 +1551,32 @@ def render_input_panel() -> str | None:
                 "Message Bud",
                 label_visibility="collapsed",
                 placeholder="Message Bud...",
+                disabled=disabled,
             )
         with send_col:
-            submitted = st.form_submit_button("Send", use_container_width=True)
+            submitted = st.form_submit_button(
+                "Send", use_container_width=True, disabled=disabled
+            )
     if submitted and typed.strip():
         queue_prompt(typed.strip())
     return None
+
+
+def render_thinking_state() -> None:
+    st.html(
+        """
+<div class="thinking-row">
+    <div class="message-avatar">Bu</div>
+    <div class="thinking-card">
+        <div class="thinking-title">
+            <span class="thinking-dot"></span>
+            <span>Grounding the answer</span>
+        </div>
+        <p class="thinking-copy">Checking calendar, plan, habits, and memory.</p>
+    </div>
+</div>
+"""
+    )
 
 
 def render_notes_view() -> None:
@@ -1608,33 +1676,20 @@ if "messages" not in st.session_state:
 if "pending_prompt" not in st.session_state:
     st.session_state.pending_prompt = None
 
+if "processing_prompt" not in st.session_state:
+    st.session_state.processing_prompt = None
+
 if "active_view" not in st.session_state:
     st.session_state.active_view = "Coach"
 
-prompt_to_process = st.session_state.pending_prompt
-if prompt_to_process:
+prompt_to_queue = st.session_state.pending_prompt
+if prompt_to_queue:
     st.session_state.pending_prompt = None
+    st.session_state.processing_prompt = prompt_to_queue
+    st.session_state.active_view = "Coach"
     st.session_state.messages.append(
-        {"role": "user", "content": prompt_to_process, "sources": []}
+        {"role": "user", "content": prompt_to_queue, "sources": []}
     )
-    with st.status("Grounding the answer", expanded=True) as status:
-        st.write("Checking calendar, plan, habits, and memory.")
-        try:
-            output, sources = send_to_agent(prompt_to_process)
-            status.update(label="Answer ready", state="complete", expanded=False)
-        except Exception as exc:
-            output = (
-                "I could not complete that run. Check the model provider settings "
-                f"and Calendar credentials.\n\n`{exc}`"
-            )
-            sources = []
-            status.update(label="Run failed", state="error", expanded=False)
-
-    st.session_state.messages.append(
-        {"role": "assistant", "content": output, "sources": sources}
-    )
-    remember_later(prompt_to_process)
-    st.cache_data.clear()
     st.rerun()
 
 with st.sidebar:
@@ -1658,6 +1713,8 @@ with st.sidebar:
             st.rerun()
 
 main_col, side_col = st.columns([0.64, 0.36], gap="large")
+response_status_slot = None
+is_processing = bool(st.session_state.processing_prompt)
 
 with main_col:
     with st.container(key="main_workspace"):
@@ -1667,7 +1724,10 @@ with main_col:
         if active_view == "Coach":
             render_quick_actions()
             render_chat()
-            render_input_panel()
+            if is_processing:
+                render_thinking_state()
+                response_status_slot = st.empty()
+            render_input_panel(disabled=is_processing)
         elif active_view == "Plan":
             st.html(
                 """
@@ -1725,3 +1785,26 @@ with side_col:
             render_calendar(today)
         with st.container(key="todo_panel"):
             render_todo_plan(today, compact=True)
+
+prompt_to_process = st.session_state.processing_prompt
+if prompt_to_process:
+    status_target = response_status_slot or st.empty()
+    with status_target.status("Grounding the answer", expanded=False) as status:
+        try:
+            output, sources = send_to_agent(prompt_to_process)
+            status.update(label="Answer ready", state="complete", expanded=False)
+        except Exception as exc:
+            output = (
+                "I could not complete that run. Check the model provider settings "
+                f"and Calendar credentials.\n\n`{exc}`"
+            )
+            sources = []
+            status.update(label="Run failed", state="error", expanded=False)
+
+    st.session_state.processing_prompt = None
+    st.session_state.messages.append(
+        {"role": "assistant", "content": output, "sources": sources}
+    )
+    remember_later(prompt_to_process)
+    st.cache_data.clear()
+    st.rerun()
